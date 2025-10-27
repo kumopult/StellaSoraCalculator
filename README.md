@@ -1,0 +1,2 @@
+# StellaSoraCalculator
+用于在星塔旅人规划体力和资源的一些小工具
