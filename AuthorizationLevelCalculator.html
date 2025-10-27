@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>星塔旅人权限等级计算器</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f0f2f5;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        h1 {
+            text-align: center;
+            margin-bottom: 18px;
+            font-size: 2.1em;
+            letter-spacing: 2px;
+        }
+        .input-section {
+            margin-bottom: 20px;
+            display: inline-block;
+            text-align: left;
+            background-color: #f8f9fa;
+            border-radius: 6px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.08);
+            border: 1px solid #e9ecef;
+            padding: 14px 24px 10px 24px;
+        }
+        .input-group {
+            margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+        }
+        .input-group label {
+            display: inline-block;
+            width: 90px;
+            font-size: 13px;
+            color: #333;
+        }
+        .input-group input[type="number"],
+        .input-group input[type="date"] {
+            margin: 0 2px;
+            padding: 2px 4px;
+            font-size: 13px;
+            border-radius: 4px;
+            border: 1px solid #ced4da;
+            background: #fff;
+            outline: none;
+            transition: border 0.2s;
+        }
+        .input-group input[type="number"] {
+            width: 80px;
+        }
+        .input-group input[type="date"] {
+            width: 130px;
+        }
+        .timeline {
+            position: relative;
+            margin: 40px auto;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            width: 100%;
+        }
+        .axis {
+            position: relative;
+            width: 4px;
+            background: linear-gradient(to bottom, #007bff, #00a5ff);
+            border-radius: 2px;
+            box-shadow: 0 0 10px rgba(0,123,255,0.3);
+            z-index: 1;
+        }
+        .level-mark {
+            position: absolute;
+            right: 50%;
+            transform: translateY(-50%);
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            font-size: 14px;
+            font-weight: bold;
+            color: #333;
+            width: 180px;
+        }
+        .level-mark::after {
+            content: '';
+            display: block;
+            width: 80px;
+            height: 2px;
+            background: linear-gradient(to right, transparent, #007bff);
+            margin-left: 10px;
+        }
+        .date-mark {
+            position: absolute;
+            left: 50%;
+            transform: translateY(-50%);
+            display: flex;
+            align-items: center;
+            color: #333;
+            font-weight: 500;
+        }
+        .date-mark::before {
+            content: '';
+            display: block;
+            width: 80px;
+            height: 2px;
+            background: linear-gradient(to left, transparent, #007bff);
+            margin-right: 10px;
+        }
+        .exp-form {
+            margin-left: 90px;
+            padding: 10px;
+            background-color: #f8f9fa;
+            border-radius: 4px;
+            display: block;
+            position: relative;
+            z-index: 2;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            border: 1px solid #e9ecef;
+        }
+        .exp-form-row {
+            display: flex;
+            align-items: center;
+            margin-bottom: 2px;
+        }
+        .exp-form input {
+            margin: 0 2px;
+            padding: 2px 4px;
+            font-size: 13px;
+        }
+        .exp-form input[type="number"] {
+            width: 60px;
+        }
+        .exp-form input[type="text"] {
+            width: 90px;
+        }
+        .exp-form button {
+            margin: 0 2px;
+            padding: 2px 8px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 13px;
+        }
+        .exp-form button:hover {
+            background-color: #0056b3;
+        }
+        .unlock-info {
+            position: absolute;
+            right: calc(50% + 290px);
+            transform: translateY(-50%);
+            color: #28a745;
+            font-size: 13px;
+            width: 180px;
+            text-align: right;
+            font-weight: 500;
+            text-shadow: 0 0 5px rgba(40,167,69,0.2);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>星塔旅人权限等级计算器</h1>
+        
+    <div class="input-section">
+        <div style="margin: 0 auto 18px auto; max-width: 400px; text-align: center;">
+            <label for="scaleRange" style="font-size:13px;color:#333;">数轴缩放：</label>
+            <input type="range" id="scaleRange" min="0.2" max="2" step="0.01" value="0.5" style="vertical-align:middle;width:180px;">
+            <span id="scaleValue" style="font-size:13px;color:#007bff;">0.5</span> <span style="font-size:13px;">px/经验</span>
+        </div>
+            <div class="input-group">
+                <label for="startDate">起始日期：</label>
+                <input type="date" id="startDate">
+            </div>
+            <div class="input-group">
+                <label for="dayCount">计算天数：</label>
+                <input type="number" id="dayCount" min="1" value="7">
+            </div>
+            <div class="input-group">
+                <label for="currentLevel">当前等级：</label>
+                <input type="number" id="currentLevel" min="1" value="1">
+            </div>
+            <div class="input-group">
+                <label for="currentExp">当前经验值：</label>
+                <input type="number" id="currentExp" min="0" value="0">
+            </div>
+        </div>
+
+        <div id="timeline" class="timeline">
+            <div class="axis"></div>
+        </div>
+    </div>
+
+    <script>
+        // 等级经验值列表
+        const levelExpList = [100, 100, 200, 300, 400, 500, 600, 700, 800, 900,
+                            1000, 1100, 1200, 1300, 1400, 1500, 1600, 1700, 1800, 1900];
+
+        // 解锁内容字典
+        const unlockContent = {
+            10: "基础试炼",
+            20: "纹章试炼、星塔难度5"
+        };
+
+        // 默认每日经验来源模板
+        const defaultExpSources = [
+            { name: "日常任务", value: 300 },
+            { name: "自然恢复", value: 240 },
+            { name: "道具恢复", value: 0 },
+            { name: "购买体力", value: 0 }
+        ];
+
+        class Calculator {
+            constructor() {
+                this.initializeElements();
+                this.bindEvents();
+                this.scaleInput = document.getElementById('scaleRange');
+                this.scaleValueSpan = document.getElementById('scaleValue');
+                this.scale = parseFloat(this.scaleInput.value);
+                this.scaleValueSpan.textContent = this.scale;
+                this.scaleInput.addEventListener('input', () => {
+                    this.scale = parseFloat(this.scaleInput.value);
+                    this.scaleValueSpan.textContent = this.scale;
+                    this.updateTimeline();
+                });
+                this.updateTimeline();
+            }
+
+            initializeElements() {
+                this.startDateInput = document.getElementById('startDate');
+                this.dayCountInput = document.getElementById('dayCount');
+                this.currentLevelInput = document.getElementById('currentLevel');
+                this.currentExpInput = document.getElementById('currentExp');
+                this.timeline = document.getElementById('timeline');
+                this.forms = new Map(); // 存储所有表单
+
+                // 设置起始日期为今天
+                const today = new Date();
+                this.startDateInput.value = today.toISOString().split('T')[0];
+            }
+
+            bindEvents() {
+                const inputs = [this.startDateInput, this.dayCountInput, this.currentLevelInput, this.currentExpInput];
+                inputs.forEach(input => {
+                    input.addEventListener('change', () => this.updateTimeline());
+                });
+            }
+
+            createExpForm(date) {
+                const form = document.createElement('div');
+                form.className = 'exp-form';
+                
+                const sources = JSON.parse(JSON.stringify(defaultExpSources));
+                const formState = {
+                    sources: sources,
+                    form: form
+                };
+                
+                const updateTotal = () => {
+                    return formState.sources.reduce((sum, source) => sum + Number(source.value), 0);
+                };
+                
+                const createRow = (source) => {
+                    const row = document.createElement('div');
+                    row.className = 'exp-form-row';
+                    
+                    const nameInput = document.createElement('input');
+                    nameInput.type = 'text';
+                    nameInput.value = source.name;
+                    nameInput.addEventListener('change', () => {
+                        source.name = nameInput.value;
+                    });
+
+                    const valueInput = document.createElement('input');
+                    valueInput.type = 'number';
+                    valueInput.value = source.value;
+                    valueInput.min = 0;
+                    valueInput.addEventListener('change', () => {
+                        source.value = Number(valueInput.value);
+                        this.updateTimeline();
+                    });
+
+                    const deleteBtn = document.createElement('button');
+                    deleteBtn.textContent = '删除';
+                    deleteBtn.onclick = () => {
+                        const index = formState.sources.indexOf(source);
+                        if (index > -1) {
+                            formState.sources.splice(index, 1);
+                            row.remove();
+                            this.updateTimeline();
+                        }
+                    };
+
+                    row.appendChild(nameInput);
+                    row.appendChild(valueInput);
+                    row.appendChild(deleteBtn);
+                    return row;
+                };
+
+                formState.sources.forEach(source => {
+                    form.appendChild(createRow(source));
+                });
+
+                const addButton = document.createElement('button');
+                addButton.textContent = '添加来源';
+                addButton.onclick = () => {
+                    const newSource = { name: '新来源', value: 0 };
+                    formState.sources.push(newSource);
+                    form.insertBefore(createRow(newSource), addButton);
+                };
+
+                form.appendChild(addButton);
+
+                return {
+                    form: form,
+                    getTotal: updateTotal
+                };
+            }
+
+            calculateLevelAndExp(baseLevel, baseExp, addExp) {
+                let currentLevel = baseLevel;
+                let currentExp = baseExp + addExp;
+                
+                while (currentLevel <= levelExpList.length) {
+                    const requiredExp = levelExpList[currentLevel - 1];
+                    if (requiredExp && currentExp >= requiredExp) {
+                        currentExp -= requiredExp;
+                        currentLevel++;
+                    } else {
+                        break;
+                    }
+                }
+                
+                if (currentLevel > levelExpList.length) {
+                    currentLevel = levelExpList.length;
+                    currentExp = levelExpList[currentLevel - 1] || 0;
+                }
+                
+                return { level: currentLevel, exp: currentExp };
+            }
+
+            updateTimeline() {
+                const startDate = new Date(this.startDateInput.value);
+                const dayCount = parseInt(this.dayCountInput.value);
+                const currentLevel = parseInt(this.currentLevelInput.value);
+                const currentExp = parseInt(this.currentExpInput.value);
+
+                // 清理不再需要的表单
+                const neededDates = new Set();
+                for (let i = 0; i <= dayCount; i++) {
+                    const date = new Date(startDate);
+                    date.setDate(startDate.getDate() + i);
+                    neededDates.add(date.toISOString());
+                }
+                for (const dateKey of this.forms.keys()) {
+                    if (!neededDates.has(dateKey)) {
+                        this.forms.delete(dateKey);
+                    }
+                }
+                
+                this.timeline.innerHTML = '<div class="axis"></div>';
+
+                let totalHeight = 0;
+                // 创建等级刻度
+                for (let i = 1; i <= levelExpList.length + 1; i++) {
+                    const levelMark = document.createElement('div');
+                    levelMark.className = 'level-mark';
+                    levelMark.textContent = `Level ${i}`;
+                    if (i > 1) {
+                        totalHeight += levelExpList[i - 2] * this.scale;
+                    }
+                    levelMark.style.top = `${totalHeight}px`;
+                    this.timeline.appendChild(levelMark);
+                    if (unlockContent[i]) {
+                        const unlockInfo = document.createElement('div');
+                        unlockInfo.className = 'unlock-info';
+                        unlockInfo.textContent = unlockContent[i];
+                        unlockInfo.style.top = `${totalHeight}px`;
+                        this.timeline.appendChild(unlockInfo);
+                    }
+                }
+                this.timeline.style.height = `${totalHeight}px`;
+
+                // 计算并创建日期标记
+                let workingLevel = currentLevel;
+                let workingExp = currentExp;
+                let accumulatedExp = 0;
+
+                for (let i = 0; i <= dayCount; i++) {
+                    const currentDate = new Date(startDate);
+                    currentDate.setDate(startDate.getDate() + i);
+                    const dateKey = currentDate.toISOString();
+                    
+                    // 获取现有表单或创建新表单
+                    let formData;
+                    if (this.forms.has(dateKey)) {
+                        formData = this.forms.get(dateKey);
+                    } else {
+                        formData = this.createExpForm(currentDate);
+                        this.forms.set(dateKey, formData);
+                    }
+                    
+                    const position = this.calculatePosition(workingLevel, workingExp);
+                    
+                    const dateMark = document.createElement('div');
+                    dateMark.className = 'date-mark';
+                    
+                    const dateString = currentDate.toLocaleDateString('zh-CN', {
+                        month: 'numeric',
+                        day: 'numeric',
+                        weekday: 'narrow'
+                    });
+                    dateMark.textContent = dateString;
+                    dateMark.style.top = `${position}px`;
+                    
+                    formData.form.classList.add('visible');
+                    dateMark.appendChild(formData.form);
+                    this.timeline.appendChild(dateMark);
+
+                    // 计算下一天的等级和经验
+                    accumulatedExp += formData.getTotal();
+                    const result = this.calculateLevelAndExp(currentLevel, currentExp, accumulatedExp);
+                    workingLevel = result.level;
+                    workingExp = result.exp;
+                }
+            }
+
+            calculatePosition(level, exp) {
+                let position = 0;
+                for (let i = 1; i < level; i++) {
+                    position += (levelExpList[i - 1] || 0) * this.scale;
+                }
+                position += exp * this.scale;
+                return position;
+            }
+        }
+
+        // 初始化计算器
+        new Calculator();
+    </script>
+</body>
+</html>
